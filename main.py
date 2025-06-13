@@ -7,6 +7,16 @@ from time import *
 
 #Functions called by buttons
 class Autoclicker:
+    autoclickerRunning = False
+
+    def isAutoclickerRunning():
+        return Autoclicker.autoclickerRunning
+
+    def enableAutoclicker():
+        Autoclicker.autoclickerRunning = True
+
+    def disableAutoclicker():
+        Autoclicker.autoclickerRunning = False
 
     def validate_cps(input):
         try:
@@ -17,14 +27,21 @@ class Autoclicker:
         except:
             return False
 
-    def convertToCps(period):
-        return 1/period
+    def convertToPeriod(cps):
+        return 1/int(cps)
 
-    def startAutoClicker():
+    def toggleAutoclicker():
         KeyThread.setMode("Default")
-        if Autoclicker.validate_cps(cps.get()):
+        if Autoclicker.isAutoclickerRunning() is True:
+            Autoclicker.disableAutoclicker()
+
+        elif Autoclicker.validate_cps(cps.get()):
+            Autoclicker.enableAutoclicker()
+            period = Autoclicker.convertToPeriod(cps.get())
             mouse = Controller()
-            
+            while Autoclicker.isAutoclickerRunning():
+                mouse.click(Button.left)
+                sleep(period)
         else:
             print("Not a Decimal Greater than Zero.")
 
@@ -64,11 +81,9 @@ class KeyThread:
 
     def on_press(key): #Is going to handle flow control
         if KeyThread.currentMode == "Default":
-            #Start/Stop autoclicker
             if key is KeyThread.hotkey:
+                Autoclicker.toggleAutoclicker()
                 print(f"{KeyThread.hotkey} was hit")
-            else:
-                print(f"Not equal. Key: {key}, Hotkey: {KeyThread.hotkey}")
 
         elif KeyThread.currentMode == "Hotkey":
             KeyThread.updateHotkey(key)
@@ -114,7 +129,7 @@ clickTypeButton.pack()
 startButton = ttk.Button(root,
                         text="Start Auto Clicker",
                         width=40,
-                        command=Autoclicker.startAutoClicker)
+                        command=Autoclicker.toggleAutoclicker)
 startButton.pack()
 
 cps = StringVar()
@@ -124,6 +139,15 @@ cpsEntry = ttk.Entry(root,
                     textvariable=cps,
                     width=20)
 cpsEntry.pack()
+
+def test():
+    print("Test")
+
+testButton = ttk.Button(root,
+                        text="Test Button",
+                        width=40,
+                        command=test)
+testButton.pack()
 
 listener = keyboard.Listener(
     on_press=KeyThread.on_press,
