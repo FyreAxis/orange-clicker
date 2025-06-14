@@ -1,8 +1,9 @@
 from tkinter import *
 from tkinter import ttk
 from pynput import mouse
-from pynput.mouse import Button, Controller
+from pynput.mouse import Button
 from pynput import keyboard
+from pynput.keyboard import Listener, Key, KeyCode
 from time import *
 import threading
 
@@ -50,7 +51,7 @@ class Autoclicker(threading.Thread): #Inherit the threading.Thread class
         self.setMode("Hotkey")
 
     def updateHotkey(self, key):
-        if key is not keyboard.Key.esc:
+        if key is not Key.esc:
             self.hotkey = key
             print(f"{key} set as HotKey")
             self.setMode("Default")
@@ -61,7 +62,7 @@ class Autoclicker(threading.Thread): #Inherit the threading.Thread class
         self.setMode("SimKey")
 
     def updateSimKey(self, key):
-        if key is not keyboard.Key.esc:
+        if key is not Key.esc:
             self.simKey = key
             print(f"{self.simKey} set as SimKey")
             self.setMode("Default")
@@ -113,16 +114,16 @@ class Autoclicker(threading.Thread): #Inherit the threading.Thread class
         return 1/float(cps)
 
 #Creates our mouse controller
-mouse = Controller()
+mouse = mouse.Controller()
 
 #Object declaration
-autoclicker = Autoclicker(1, keyboard.Key.end, Button.left)
+autoclicker = Autoclicker(1, Key.end, Button.left)
 
 #Start the thread (given by inheritance)
 autoclicker.start()
 
 #Outline what the keyboard listener does
-listener = keyboard.Listener(
+listener = Listener(
     on_press=autoclicker.on_press,
     on_release=autoclicker.on_release)
 
