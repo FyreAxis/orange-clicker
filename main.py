@@ -29,8 +29,7 @@ class Autoclicker(threading.Thread): #Inherit the threading.Thread class
     #Turn on or off
     def toggle(self):
         self.setMode("Default")
-        global desiredCps
-        newCps = desiredCps.get() #Go ahead and get the cps so we can avoid errors if the user changes the cps mid-function call
+        newCps = root.getDesiredCps() #Go ahead and get the cps so we can avoid errors if the user changes the cps mid-function call
         if self.active == True:
             self.active = False
         elif Autoclicker.validate_cps(newCps):
@@ -41,8 +40,7 @@ class Autoclicker(threading.Thread): #Inherit the threading.Thread class
 
     def setMode(self, mode):
         self.currentMode = mode
-        global modeVar
-        modeVar.set(f"Mode: {mode}")
+        #updateMode(mode)
 
     def setActivateMode(self, mode):
         self.activateMode = mode
@@ -95,8 +93,8 @@ class Autoclicker(threading.Thread): #Inherit the threading.Thread class
             print(f"{key} Released")
 
     #Where the magic happens
-    def autoclick(self):
-        while self.enabled:
+    def run(self):
+        while self.enabled and self.currentMode == "Default":
             while self.active:
                 mouse.click(self.clickType)
                 sleep(self.clickPeriod)
@@ -131,72 +129,61 @@ listener = Listener(
 listener.start()
 
 #Tkinter Window Elements
+
+class GUI:
+    def __init__(self, root):
+        #Some basic variables
+        self.root = root
+        self.mode = StringVar(value="Mode: Default")
+        self.desiredCps = StringVar(value="1")
+        self.numClicks = IntVar(value=0)
+        
+        #The GUI elements
+        ttk.Frame(root) #TODO: Implement the frame to make things look nice
+        #This'll be the title label
+        ttk.Label(root, text="Orange Clicker").pack()
+        #This displays the current mode
+        ttk.Label(root,
+            textvariable=self.mode,
+            width=40).pack()
+        #This lets you switch to the hotkey recording mode
+        ttk.Button(root,
+            text="Choose the Keybind for the Auto Clicker",
+            width=40,
+            command=autoclicker.recordHotkey).pack()
+        #This lets you switch to the simulated key recording mode
+        ttk.Button(root,
+            text="Choose What is Being Clicked",
+            width=40,
+            command=autoclicker.recordSimKey).pack()
+        #This starts/stops the autoclicker
+        ttk.Button(root,
+            text="Start Auto Clicker",
+            width=40,
+            command=autoclicker.toggle).pack()
+        #This lets you input the desired clicks per second
+        ttk.Entry(root,
+            textvariable=self.desiredCps,
+            width=20).pack()
+        #This displays the test button's click count
+        ttk.Label(root,
+            textvariable=self.numClicks,
+            width=40).pack()
+        #This is a test button to test clicks/cps
+        ttk.Button(root,
+            text="Test Button",
+            width=40,
+            command=self.clicked).pack()
+    
+    def getDesiredCps(self):
+        return self.desiredCps.get()
+
+    def clicked(self): #Updates numClicks
+        clicksSoFar = self.numClicks.get()
+        clicksSoFar += 1
+        self.numClicks.set(clicksSoFar)
+        
 root = Tk() #Declares our main window
 root.title("Orange Clicker") #and names it
-
-frame = ttk.Frame(root) #TODO: Implement the frame to make things look nice
-
-nameOfProgram = ttk.Label(root, text="Orange Clicker") #This'll be the top label
-nameOfProgram.pack() #All pack functions just actually show the thing, in this case, our label
-
-modeVar = StringVar()
-modeVar.set("Mode: ")
-
-modeLabel = ttk.Label(root,
-                      textvariable=modeVar,
-                      width=40)
-modeLabel.pack()
-
-keybindButton = ttk.Button(root,
-                            text="Choose the Keybind for the Auto Clicker",
-                            width=40,
-                            command=autoclicker.recordHotkey)
-keybindButton.pack()
-
-clickTypeButton = ttk.Button(root,
-                            text="Choose What is Being Clicked",
-                            width=40,
-                            command=autoclicker.recordSimKey)
-clickTypeButton.pack()
-
-startButton = ttk.Button(root,
-                        text="Start Auto Clicker",
-                        width=40,
-                        command=autoclicker.toggle)
-startButton.pack()
-
-desiredCps = StringVar()
-desiredCps.set("1")
-
-desiredCpsEntry = ttk.Entry(root,
-                    textvariable=desiredCps,
-                    width=20)
-desiredCpsEntry.pack()
-
-numClicks = IntVar()
-numClicks.set(0)
-
-def clicked(): #Updates numClicks
-    clickSoFar = numClicks.get()
-    clickSoFar += 1
-    numClicks.set(clickSoFar)
-
-clickTracker = ttk.Label(root,
-                        textvariable=numClicks,
-                        width=40)
-clickTracker.pack()
-
-testButton = ttk.Button(root,
-                        text="Test Button",
-                        width=40,
-                        command=clicked)
-testButton.pack()
-
-#This is actually what updates the window
+GUI(root)
 root.mainloop()
-
-#If mainloop ever stops, let's go ahead and close these threads
-
-autoclicker.join()
-listener.stop()
-listener.join()
