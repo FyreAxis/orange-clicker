@@ -1,2 +1,2 @@
 # orange-clicker
-This is an auto clicker written in Python :D
+Orange Clicker uses pynput
