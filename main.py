@@ -18,25 +18,34 @@ class Autoclicker(threading.Thread): #Inherit the threading.Thread class
         #Autoclicker-management-specific properties
         self.active = False #Is it currently clicking?
         self.enabled = True #Is the Thread active? We'll just keep it quiet for now
+
         #Mouse-management-details
         self.clickPeriod = 1 #How often it clicks (in seconds)
-        self.clickType = click #What mousebutton is being clicked
+        self.buttonClick = click #What mousebutton is being clicked
+
         #Keyboard-management-details
-        self.currentMode = "Default" #This is a little redundant, but this is our actual mode
+        self.inputMode = "Default" #This is a little redundant, but this is our actual for handling input
         self.pressOrHold = "Press" #This is whether we press or hold to enable the autoclicker
         self.hotkey = hotkey #What key needs to be pressed to activate it
         self.simKey = 'a' #This is what key is being clicked (when not a mouse click)
+
         #Tkinter-specific properties
         self.root = root #root is our root window which we will be passed later on
-        self.mode = StringVar(value="Mode: Default") #By default, our object will be in default mode
+        self.mode = StringVar(value=f"Mode: {self.inputMode}") #By default, our object will be in default mode
         self.desiredCps = StringVar(value="1") #By default, our autoclicker will be 1 CPS
         self.numClicks = IntVar(value=0) #This is for tracking clicks in a test, by default it is 0
 
-        #Tkinter GUI elements
-        ttk.Frame(root).pack() #TODO: Implement the frame to make things look nice
+        #Tkinter GUI elements (also good green: #8BE854)
+        Frame(root, background="#F6B346").place(relwidth=1, relheight=1) #TODO: Implement the frame to make things look nice
+        style = ttk.Style()
+        style.configure("TButton",
+                        font="courier 12",
+                        padding=5,
+                        relief="raised")
         #This'll be the title label
-        ttk.Label(root, text="Orange Clicker").pack()
-        #This displays the current mode
+        ttk.Label(root,
+                  text="Orange Clicker").pack()
+        #This displays the input mode
         ttk.Label(root,
             textvariable=self.mode,
             width=40).pack()
@@ -58,7 +67,7 @@ class Autoclicker(threading.Thread): #Inherit the threading.Thread class
         #This lets you input the desired clicks per second
         ttk.Entry(root,
             textvariable=self.desiredCps,
-            width=20).pack()
+            width=10).pack()
         #This displays the test button's click count
         ttk.Label(root,
             textvariable=self.numClicks,
@@ -86,9 +95,9 @@ class Autoclicker(threading.Thread): #Inherit the threading.Thread class
         else: #This is the case for an invalid number, so we don't start clicking
             print(f"{newCps} is Not a Decimal Greater than Zero.")
 
-    #Just a shorthand for setting the current mode
+    #Just a shorthand for setting the input mode
     def setMode(self, mode):
-        self.currentMode = mode
+        self.inputMode = mode
         self.mode.set(value=f"Mode: {mode}") #This may be redundant eventually
 
     def setPressOrHold(self, pressOrHold):
@@ -119,15 +128,15 @@ class Autoclicker(threading.Thread): #Inherit the threading.Thread class
     #This going to handle flow control
     def on_press(self, key):
         #Default means we do on/off
-        if self.currentMode == "Default":
+        if self.inputMode == "Default":
             if key is self.hotkey:
                 self.toggleClicking()
                 print(f"{self.hotkey} was hit")
         #This means we are listening to assign for a new hotkey
-        elif self.currentMode == "Hotkey":
+        elif self.inputMode == "Hotkey":
             self.updateHotkey(key)
         #This means we are listening to assign a new SimKey
-        elif self.currentMode == "SimKey":
+        elif self.inputMode == "SimKey":
             self.updateSimKey(key)
 
     #This also has some flow control
@@ -142,8 +151,8 @@ class Autoclicker(threading.Thread): #Inherit the threading.Thread class
     #Where the magic happens
     def run(self):
         while self.enabled:
-            while self.active and self.currentMode == "Default":
-                mouse.click(self.clickType)
+            while self.active and self.inputMode == "Default":
+                mouse.click(self.buttonClick)
                 sleep(self.clickPeriod)
 
     #Non-object functions
